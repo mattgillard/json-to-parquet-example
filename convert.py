@@ -1,8 +1,8 @@
 import json
 
-with open("out.json", 'r') as j:
+with open("features.json", 'r') as j:
     contents=json.loads(j.read())
 with open('output.jsonl', 'w') as outfile:
-    for entry in contents:
+    for entry in contents['features']:
         json.dump(entry, outfile)
         outfile.write('\n')

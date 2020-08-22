@@ -6,8 +6,6 @@ Input file from:
 
 `$ http --download https://data.gov.au/geoserver/abc-local-stations/wfs\?request\=GetFeature\&typeName\=ckan_d534c0e9_a9bf_487b_ac8f_b7877a09d162\&outputFormat\=json`
 
-`$ cat features.json| jq .features> out.json`
-
 `$ python3 convert.py`
 
 `$ aws s3 cp output.jsonl s3://mig-test-bucket/input/output.json1`
