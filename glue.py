@@ -25,7 +25,7 @@ dynamic_frame = glueContext.create_dynamic_frame_from_options(
         connection_type="s3",
         format="json",
         connection_options={
-           "paths" : ["s3://bucket_name/prefix/to/files"]
+           "paths" : ["s3://mig-test-bucket/input"]
         },
         transformation_ctx="dynamic_frame") #optional - needed if you are using bookmarks
 
@@ -41,7 +41,7 @@ logger.info("{}".format(myschema))
 finalsink=glueContext.write_dynamic_frame.from_options(
             frame = dynamic_frame,
             connection_type = "s3",
-            connection_options = {"path": "s3://bucket/prefix/to/parquet" },
+            connection_options = {"path": "s3://mig-test-bucket/parquet" },
             # Optional parition key 
             #connection_options = {"path": "s3://bucket/prefix/to/parquet","partitionKeys" : ['partionkey1','paritionkey2']},
             format = "parquet",

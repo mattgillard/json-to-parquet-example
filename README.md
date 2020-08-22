@@ -10,7 +10,7 @@ Input file from:
 
 `$ python3 convert.py`
 
-`$ aws s3 cp output.jsonl s3://mig-test-bucket/output.json1`
+`$ aws s3 cp output.jsonl s3://mig-test-bucket/input/output.json1`
 
 The above could all be done with a python job in a workflow. (TODO!)
 
