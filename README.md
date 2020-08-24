@@ -16,7 +16,7 @@ Steps:
 3) Copy convert.py and glue.py into your bucket you specified under parameter: *GlueScriptsPath*
 ```
 $ aws s3 cp convert.py s3://GlueScriptsPath/convert.py
-$ aws s3 cp glue.py s3://GlueScriptsPath/glue.py`
+$ aws s3 cp glue.py s3://GlueScriptsPath/glue.py
 ```
 4) `$ aws cloudformation create-stack --stack-name gluedemo --template-body file:///path/to/cf.yaml --parameters file:///path/to/parameters.json --capabilities CAPABILITY_NAMED_IAM`
 5) `$ aws cloudformation describe-stacks  --stack-name gluedemo --query "Stacks[0].StackStatus"`
