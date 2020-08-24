@@ -13,8 +13,13 @@ Steps:
 
 1) Create an output Bucket and a bucket for your Glue scripts.
 2) Update parameters.json with the stack parameters (the buckets your created above)
-3) `$ aws cloudformation create-stack --stack-name gluedemo --template-body file:///path/to/cf.yaml --parameters file:///path/to/parameters.json --capabilities CAPABILITY_NAMED_IAM`
-4) `$ aws cloudformation describe-stacks  --stack-name gluedemo --query "Stacks[0].StackStatus"`
+3) Copy convert.py and glue.py into your bucket you specified under parameter: *GlueScriptsPath*
+```
+$ aws s3 cp convert.py s3://GlueScriptsPath/convert.py
+$ aws s3 cp glue.py s3://GlueScriptsPath/glue.py`
+```
+4) `$ aws cloudformation create-stack --stack-name gluedemo --template-body file:///path/to/cf.yaml --parameters file:///path/to/parameters.json --capabilities CAPABILITY_NAMED_IAM`
+5) `$ aws cloudformation describe-stacks  --stack-name gluedemo --query "Stacks[0].StackStatus"`
 
 Wait. :-)
 Repeat step 4 until done.
@@ -22,4 +27,7 @@ Repeat step 4 until done.
 When done go into the AWS Glue Console. Look under the ETL menu on the left.  Your jobs will be listed under *Jobs*. Triggers under *Triggers* and the Workflow under *Workflows*.
 
 Go into Workflows, and select your workflow. Go to actions and click run.  Click on history at the bottom and click on the job when it starts up and you can select *View run details*. It shows a nice GUI where the job is in the process.
+
+Cost for this workflow should only be a few cents per execution now Glue is charged by the second!
+
 
