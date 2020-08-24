@@ -1,0 +1,161 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+    Generator: "former2"
+Description: ""
+Parameters:
+    Bucket:
+        Description: "Pre-defined bucket where the input and output data files will be located"
+        Type: "String"
+# Needs no trailing slash
+    GlueTempPath:
+        Description: "Used for Glue temporary files. Must exist prior to executing CF template"
+        Type: "String"
+# Needs no trailing slash
+    GlueScriptsPath:
+        Description: "Bucket contains glue.py and convert.py. Also must exist prior to executing CF template"
+        Type: "String"
+
+
+Resources:
+    GlueJob:
+        Type: "AWS::Glue::Job"
+        Properties:
+            Name: "process_stations"
+            Role: !GetAtt IAMRole.Arn
+            ExecutionProperty: 
+                MaxConcurrentRuns: 1
+            Command: 
+                Name: "glueetl"
+                ScriptLocation: !Sub "${GlueScriptsPath}/glue.py"
+                PythonVersion: "3"
+            DefaultArguments: 
+                --TempDir: !Ref GlueTempPath
+                --enable-continuous-cloudwatch-log: "true"
+                --enable-metrics: ""
+                --job-bookmark-option: "job-bookmark-disable"
+                --job-language: "python"
+            MaxRetries: 0
+            Timeout: 2880
+            GlueVersion: "2.0"
+            NumberOfWorkers: 1
+            WorkerType: "Standard"
+
+    GlueJob2:
+        Type: "AWS::Glue::Job"
+        Properties:
+            Name: "downloaddata"
+            Role: !GetAtt IAMRole.Arn
+            ExecutionProperty: 
+                MaxConcurrentRuns: 1
+            Command: 
+                Name: "pythonshell"
+                ScriptLocation: !Sub "${GlueScriptsPath}/convert.py"
+                PythonVersion: "3"
+            DefaultArguments: 
+                --job-bookmark-option: "job-bookmark-disable"
+                --bucketname: !Ref Bucket 
+            MaxRetries: 0
+            Timeout: 2880
+            GlueVersion: "1.0"
+            MaxCapacity: 0.0625
+
+    GlueCrawler:
+        Type: "AWS::Glue::Crawler"
+        Properties:
+            Name: "crawl-radio"
+            Role: !GetAtt IAMRole.Arn
+            Targets: 
+                S3Targets: 
+                  - 
+                    Path: !Sub "s3://${Bucket}/abcstations"
+            DatabaseName: "radiostations"
+            SchemaChangePolicy: 
+                UpdateBehavior: "UPDATE_IN_DATABASE"
+                DeleteBehavior: "DEPRECATE_IN_DATABASE"
+
+    GlueTrigger:
+        Type: "AWS::Glue::Trigger"
+        Properties:
+            Name: "stations_processed"
+            Type: "CONDITIONAL"
+            StartOnCreation: true
+            Actions:
+              - CrawlerName: !Ref GlueCrawler
+            WorkflowName: !Ref Workflow
+            Predicate: 
+                Logical: "ANY"
+                Conditions: 
+                  - 
+                    LogicalOperator: "EQUALS"
+                    JobName: !Ref GlueJob
+                    #JobName: "process_stations"
+                    State: "SUCCEEDED"
+
+    GlueTrigger2:
+        Type: "AWS::Glue::Trigger"
+        Properties:
+            Name: "datadownloaded"
+            Type: "CONDITIONAL"
+            StartOnCreation: true
+            Actions:
+              - JobName: !Ref GlueJob
+            WorkflowName: !Ref Workflow
+            Predicate: 
+                Logical: "ANY"
+                Conditions: 
+                  - 
+                    LogicalOperator: "EQUALS"
+                    JobName: !Ref GlueJob2
+                    #JobName: "downloaddata"
+                    State: "SUCCEEDED"
+
+    GlueTrigger3:
+        Type: "AWS::Glue::Trigger"
+        Properties:
+            Name: "start_stations_workflow"
+            Type: "ON_DEMAND"
+            Actions:
+                - JobName: !Ref GlueJob2
+                      #- JobName: "downloaddata"
+            WorkflowName: !Ref Workflow
+
+    Workflow:
+        Type: "AWS::Glue::Workflow"
+        Properties: 
+            Description: "My workflow"
+            Name: "download_and_process_ABCstations"
+
+    IAMManagedPolicy:
+        Type: "AWS::IAM::ManagedPolicy"
+        Properties:
+            Path: "/"
+            PolicyDocument: 
+                !Sub |
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Sid": "VisualEditor0",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "s3:PutObject",
+                                    "s3:GetObject",
+                                    "s3:DeleteObject"
+                                ],
+                                "Resource": [
+                                    "arn:aws:s3:::${Bucket}/*"
+                                ]
+                            }
+                        ]
+                    }
+
+    IAMRole:
+        Type: "AWS::IAM::Role"
+        Properties:
+            Path: "/service-role/"
+            RoleName: "AWSGlueServiceRole-gluedemo"
+            AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+            MaxSessionDuration: 3600
+            ManagedPolicyArns: 
+                - "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+                - !Ref IAMManagedPolicy

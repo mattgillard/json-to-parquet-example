@@ -1,19 +1,25 @@
 # Sample Glue script
 
-Quick n dirty script to take a json lines input file (or all files from the prefix specified in the script) and creates a parquet output file for demo purposes.  Create a glue crawler on the output file to query in Athena.
+Simple contrived example designed to illustrate:
 
-Input file from: 
+* Python shell job for pre-glue tasks (eg: download external file to process, and perform a simple conversion)
+* PySpark example to take the input json file and create an output Parquet file
+* Demonstrate the pattern for sending variables from one task to another via Workflow Parameters
+* Automatically execute a Glue crawler as the last task in the workflow to populate a Glue catalog table where the subsequent table can be queried via Athena
 
-`$ http --download https://data.gov.au/geoserver/abc-local-stations/wfs\?request\=GetFeature\&typeName\=ckan_d534c0e9_a9bf_487b_ac8f_b7877a09d162\&outputFormat\=json`
+Input file is from: `https://data.gov.au/geoserver/abc-local-stations/wfs\?request\=GetFeature\&typeName\=ckan_d534c0e9_a9bf_487b_ac8f_b7877a09d162\&outputFormat\=json` 
 
-`$ python3 convert.py`
+Steps:
 
-`$ aws s3 cp output.jsonl s3://mig-test-bucket/input/output.json1`
+1) Create an output Bucket and a bucket for your Glue scripts.
+2) Update parameters.json with the stack parameters (the buckets your created above)
+3) `$ aws cloudformation create-stack --stack-name gluedemo --template-body file:///path/to/cf.yaml --parameters file:///path/to/parameters.json --capabilities CAPABILITY_NAMED_IAM`
+4) `$ aws cloudformation describe-stacks  --stack-name gluedemo --query "Stacks[0].StackStatus"`
 
-The above could all be done with a python job in a workflow. (TODO!)
+Wait. :-)
+Repeat step 4 until done.
 
-Create a Glue job with the glue.py as the script.
-Ensure the Glue IAM service role has the AWSGlueServiceRole attached as well as a custom policy to read/write your s3 bucket.
+When done go into the AWS Glue Console. Look under the ETL menu on the left.  Your jobs will be listed under *Jobs*. Triggers under *Triggers* and the Workflow under *Workflows*.
 
-
+Go into Workflows, and select your workflow. Go to actions and click run.  Click on history at the bottom and click on the job when it starts up and you can select *View run details*. It shows a nice GUI where the job is in the process.
 

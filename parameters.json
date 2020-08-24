@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "Bucket",
+    "ParameterValue": "put a bucket here"
+  }, 
+  {
+    "ParameterKey": "GlueTempPath",
+    "ParameterValue": "s3://bucketname/temp"
+  },
+  {
+    "ParameterKey": "GlueScriptsPath",
+    "ParameterValue": "s3://bucketname/scripts"
+  }
+]
